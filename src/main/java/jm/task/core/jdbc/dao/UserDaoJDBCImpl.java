@@ -18,22 +18,35 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void createUsersTable() throws SQLException {
-         comand = "CREATE TABLE IF NOT EXISTS users (ID INT PRIMARY KEY AUTO_INCREMENT , NAME VARCHAR(20), LASTNAME VARCHAR(20), AGE INT)";
+        String sql = "CREATE TABLE if not exists users(`id` INT  NOT NULL AUTO_INCREMENT,`firstName` VARCHAR(45) NOT NULL,`lastName` VARCHAR(45) NOT NULL,`age` INT NOT NULL,PRIMARY KEY (`id`));";
 
-        statement.execute(comand);
-        statement.close();
+        try (Statement statement = Util.getConnection().createStatement()) {
+            statement.execute(sql);
+
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
-    public void dropUsersTable() throws SQLException {
-        comand = "DROP TABLE users";
-        statement.execute(comand);
-        statement.close();
+    @Override
+    public void dropUsersTable() {
+        String sql = "Drop TABLE IF EXISTS users";
+
+        try (Statement statement = Util.getConnection().createStatement()) {
+            statement.execute(sql);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
+
 
     public void saveUser(String name, String lastName, byte age) throws SQLException, ClassNotFoundException {
         PreparedStatement preparedStatement;
-        comand = "INSERT INTO users (name, lastname, age) VALUES( ?, ?, ?)";
+        comand = "INSERT INTO users (firstname, lastname, age) VALUES( ?, ?, ?)";
         preparedStatement = Util.getConnection().prepareStatement(comand);
         preparedStatement.setLong(1, 1);
         preparedStatement.setString(1, name);
@@ -54,19 +67,29 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public List<User> getAllUsers() throws SQLException {
-        List<User> users = new ArrayList<>();
-        comand = "SELECT id, name, lastname, age";
-        ResultSet rs = statement.executeQuery(comand);
-        while (rs.next()) {
-           users.add((User) rs);
+        ArrayList<User> users = new ArrayList<>();
+        try ( ResultSet resultSet = Util.getConnection().createStatement().executeQuery("SELECT * from users")){
+
+            while (resultSet.next()) {
+                users.add(new User((long) resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getByte(4)));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
-        statement.close();
+
         return users;
     }
 
-    public void cleanUsersTable() throws SQLException {
-        comand = "TRUNCATE TABLE users";
-        statement.execute(comand);
-        statement.close();
+    public void cleanUsersTable() {
+        try (Statement statement=Util.getConnection().createStatement()){
+            statement.executeUpdate("truncate  users");
+
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }
