@@ -11,13 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    String comand;
-    Statement statement = Util.getConnection().createStatement();
 
-    public UserDaoJDBCImpl() throws SQLException, ClassNotFoundException {
+
+    public UserDaoJDBCImpl() {
     }
 
-    public void createUsersTable() throws SQLException {
+    public void createUsersTable(){
         String sql = "CREATE TABLE if not exists users(`id` INT  NOT NULL AUTO_INCREMENT,`firstName` VARCHAR(45) NOT NULL,`lastName` VARCHAR(45) NOT NULL,`age` INT NOT NULL,PRIMARY KEY (`id`));";
 
         try (Statement statement = Util.getConnection().createStatement()) {
@@ -44,36 +43,54 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
 
-    public void saveUser(String name, String lastName, byte age) throws SQLException, ClassNotFoundException {
-        PreparedStatement preparedStatement;
-        comand = "INSERT INTO users (firstname, lastname, age) VALUES( ?, ?, ?)";
-        preparedStatement = Util.getConnection().prepareStatement(comand);
-        preparedStatement.setLong(1, 1);
-        preparedStatement.setString(1, name);
-        preparedStatement.setString(2, lastName);
-        preparedStatement.setByte(3, age);
+    public void saveUser(String name, String lastName, byte age) {
 
-        preparedStatement.executeUpdate();
-        preparedStatement.close();
+        String command = "INSERT INTO users (firstname, lastname, age) VALUES( ?, ?, ?)";
+
+        try(PreparedStatement preparedStatement = Util.getConnection().prepareStatement(command)) {
+
+            preparedStatement.setLong(1, 1);
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, lastName);
+            preparedStatement.setByte(3, age);
+
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+
+
     }
 
-    public void removeUserById(long id) throws SQLException, ClassNotFoundException {
-        PreparedStatement preparedStatement;
-        comand = "DELETE FROM users WHERE ID=?";
-        preparedStatement = Util.getConnection().prepareStatement(comand);
-        preparedStatement.setLong(1, id);
-        preparedStatement.executeUpdate();
-        preparedStatement.close();
+    public void removeUserById(long id) {
+
+        String command = "DELETE FROM users WHERE ID=?";
+
+        try(PreparedStatement preparedStatement = Util.getConnection().prepareStatement(command)) {
+
+            preparedStatement.setLong(1, id);
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
-    public List<User> getAllUsers() throws SQLException {
+    public List<User> getAllUsers(){
         ArrayList<User> users = new ArrayList<>();
         try ( ResultSet resultSet = Util.getConnection().createStatement().executeQuery("SELECT * from users")){
 
             while (resultSet.next()) {
                 users.add(new User((long) resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3), resultSet.getByte(4)));
             }
-            System.out.println(users);
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
